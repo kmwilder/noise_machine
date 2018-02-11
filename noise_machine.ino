@@ -29,6 +29,8 @@ String waveFile;
 TMRpcm music;
 
 //==========================================
+// SETUP
+//==========================================
 void setup() {
 
   // Open serial communications and wait for port to open:
@@ -37,36 +39,7 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  music.speakerPin = 9;
-  music.setVolume(5);
-  music.quality(1);
-
-  setTime(0,0,0,0,0,0);
-  
-  // LED
-  pinMode(LED_PIN, OUTPUT);
-  
-  // SD init
-  //initSD();
-
-  // Read config from SD card
-  readConfig();
-
-  // buzzer
-  playSong();
-}
-
-//======================================
-void loop() {
-  digitalClockDisplay();
-  Alarm.delay(1000);
-}
-
-void readConfig() {
-  String waveFile = "";
-  int hour = 0;
-  int minute = 0;
-
+  // SD card init
   Serial.print("Initializing SD card...");
   if(!SD.begin(chipSelect)) {
       Serial.println("SD init failed!");
@@ -74,10 +47,35 @@ void readConfig() {
     Serial.println("SD init done!");
   }
 
-  if(SD.exists("CFG.TXT"))
-    Serial.println("CFG.TXT exists.");
-  else
-    Serial.println("CFG.TXT doesn't exist.");
+  // Music init
+  music.speakerPin = 9;
+  music.setVolume(5);
+  music.quality(1);
+
+  setTime(0,0,0,0,0,0); // default, if CFG file not read properly
+  
+  pinMode(LED_PIN, OUTPUT); // LED pin
+
+  // Read config from SD card, set alarms accordingly
+  readConfig();
+}
+
+//==========================================
+// LOOP
+//==========================================
+void loop() {
+  digitalClockDisplay(); // TODO remove
+  Alarm.delay(1000);
+
+  // TODO replace this with the buttons to start/stop, knobs to select track
+}
+
+//==========================================
+// HELPERS
+//==========================================
+void readConfig() {
+  int hour = 0;
+  int minute = 0;
   
   File myFile;
   myFile = SD.open("CFG.TXT", FILE_READ);
@@ -139,8 +137,8 @@ String readLine(File file) {
     return received;
 }
 
-void digitalClockDisplay()
-{
+// TODO remove
+void digitalClockDisplay() {
  // digital clock display of the time
  Serial.print(hour());
  Serial.print(":");
@@ -150,103 +148,7 @@ void digitalClockDisplay()
  Serial.println();
 }
 
-//======================================
 void wakeUpAlarm() {
-  playSong();
-}
-
-void playTone() {
-
-  char notes[] = "cdfda ag cdfdg gf";
-  const int noteDuration = 1000 / 4;
-  
-  Serial.println("Timer triggered...");
-  for (int thisNote = 0; thisNote < 17; thisNote++) {
-    int noteDuration = 1000 / 4;
-    tone(9, notes[thisNote], noteDuration);
-
-    int pauseBetweenNotes = noteDuration * 1.3;
-    delay(pauseBetweenNotes);
-    noTone(9);
-  }
-}
-
-void playSong() {
   digitalWrite(LED_PIN, HIGH);
   music.play("noc.wav");
 }
-
-/*
- 
-//======================================
-void initSD() {
-
-  // set up variables using the SD utility library functions:
-  Sd2Card card;
-  SdVolume volume;
-  SdFile root;
-  
-  Serial.print("\nInitializing SD card...");
-
-  // we'll use the initialization code from the utility libraries
-  // since we're just testing if the card is working!
-  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
-    Serial.println("initialization failed. Things to check:");
-    Serial.println("* is a card inserted?");
-    Serial.println("* is your wiring correct?");
-    Serial.println("* did you change the chipSelect pin to match your shield or module?");
-    return;
-  } else {
-    Serial.println("Wiring is correct and a card is present.");
-  }
-
-  // print the type of card
-  Serial.print("\nCard type: ");
-  switch (card.type()) {
-    case SD_CARD_TYPE_SD1:
-      Serial.println("SD1");
-      break;
-    case SD_CARD_TYPE_SD2:
-      Serial.println("SD2");
-      break;
-    case SD_CARD_TYPE_SDHC:
-      Serial.println("SDHC");
-      break;
-    default:
-      Serial.println("Unknown");
-  }
-
-  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
-  if (!volume.init(card)) {
-    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
-    return;
-  }
-
-  // print the type and size of the first FAT-type volume
-  uint32_t volumesize;
-  Serial.print("\nVolume type is FAT");
-  Serial.println(volume.fatType(), DEC);
-  Serial.println();
-
-  volumesize = volume.blocksPerCluster();    // clusters are collections of blocks
-  volumesize *= volume.clusterCount();       // we'll have a lot of clusters
-  volumesize *= 512;                            // SD card blocks are always 512 bytes
-  Serial.print("Volume size (bytes): ");
-  Serial.println(volumesize);
-  Serial.print("Volume size (Kbytes): ");
-  volumesize /= 1024;
-  Serial.println(volumesize);
-  Serial.print("Volume size (Mbytes): ");
-  volumesize /= 1024;
-  Serial.println(volumesize);
-
-
-  Serial.println("\nFiles found on the card (name, date and size in bytes): ");
-  root.openRoot(volume);
-
-  // list all files in the card with date and size
-  root.ls(LS_R | LS_DATE | LS_SIZE);
-}
- 
- */
-
