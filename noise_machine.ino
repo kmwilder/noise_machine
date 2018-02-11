@@ -1,9 +1,18 @@
+// Music Libraries
+#include <pcmConfig.h>
+#include <pcmRF.h>
+#include <TMRpcm.h>
+
+// Time / Alarm Libraries
 #include <Time.h>
 #include <TimeLib.h>
 #include <TimeAlarms.h>
+
+// SD Card Libraries
 #include <SPI.h>
 #include <SD.h>
 
+// Globals
 const int BUZZER_PIN = 9;
 const int LED_PIN = 8;
 // SD card reader uses pins 10-13
@@ -17,6 +26,7 @@ const int chipSelect = 10;
 
 // Audio
 String waveFile;
+TMRpcm music;
 
 //==========================================
 void setup() {
@@ -26,6 +36,10 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+
+  music.speakerPin = 9;
+  music.setVolume(5);
+  music.quality(1);
 
   setTime(0,0,0,0,0,0);
   
@@ -44,7 +58,6 @@ void setup() {
 
 //======================================
 void loop() {
-  // blinkLED();
   digitalClockDisplay();
   Alarm.delay(1000);
 }
@@ -142,7 +155,7 @@ void wakeUpAlarm() {
   playSong();
 }
 
-void playSong() {
+void playTone() {
 
   char notes[] = "cdfda ag cdfdg gf";
   const int noteDuration = 1000 / 4;
@@ -158,18 +171,11 @@ void playSong() {
   }
 }
 
-void blinkLED() {
-  for(int i = 0; i < 11; i++) {
-    int myDelay = 2 << i;
-    digitalWrite(LED_PIN, HIGH);
-    delay(myDelay);
-    digitalWrite(LED_PIN, LOW);
-    delay(myDelay);
-  }
+void playSong() {
+  digitalWrite(LED_PIN, HIGH);
+  music.play("noc.wav");
 }
 
-//==============================================================
-// DEAD CODE HERE (not using git yet)
 /*
  
 //======================================
