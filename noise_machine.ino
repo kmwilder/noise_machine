@@ -15,6 +15,8 @@
 // Globals
 const int BUZZER_PIN = 9;
 const int LED_PIN = 8;
+const int ON_BUTTON = 1;
+const int NEXT_BUTTON = 2;
 // SD card reader uses pins 10-13
 
 // change this to match your SD shield or module;
@@ -27,6 +29,7 @@ const int chipSelect = 10;
 // Audio
 String waveFile;
 TMRpcm music;
+bool isPlaying = false;
 
 //==========================================
 // SETUP
@@ -51,10 +54,12 @@ void setup() {
   music.speakerPin = 9;
   music.setVolume(5);
   music.quality(1);
+  music.loop(1);
 
   setTime(0,0,0,0,0,0); // default, if CFG file not read properly
   
-  pinMode(LED_PIN, OUTPUT); // LED pin
+  pinMode(ON_BUTTON, INPUT);
+  pinMode(NEXT_BUTTON, INPUT);
 
   // Read config from SD card, set alarms accordingly
   readConfig();
@@ -68,6 +73,18 @@ void loop() {
   Alarm.delay(1000);
 
   // TODO replace this with the buttons to start/stop, knobs to select track
+  int onButtonState = digitalRead(ON_BUTTON);
+  int nextButtonState = digitalRead(NEXT_BUTTON);
+  if(onButtonState == LOW) {
+    Serial.println("Button pressed!");
+    if(isPlaying == true) {
+      isPlaying = false;
+      music.pause();
+    } else {
+      isPlaying = true;
+      music.play("noc.wav");
+    }
+  }
 }
 
 //==========================================
@@ -137,7 +154,6 @@ String readLine(File file) {
     return received;
 }
 
-// TODO remove
 void digitalClockDisplay() {
  // digital clock display of the time
  Serial.print(hour());
@@ -149,6 +165,6 @@ void digitalClockDisplay() {
 }
 
 void wakeUpAlarm() {
-  digitalWrite(LED_PIN, HIGH);
   music.play("noc.wav");
+  isPlaying = true;
 }
